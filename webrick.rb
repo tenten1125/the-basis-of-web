@@ -8,10 +8,6 @@ server = WEBrick::HTTPServer.new({
   :Port => 8000
 })
 
-trap(:INT){
-    server.shutdown
-}
-
 server.mount_proc("/time") do |req, res|
   # レスポンス内容を出力
   body = "<html><body>\n"
@@ -55,5 +51,47 @@ server.mount_proc("/hello") do |req, res|
   @time = Time.new
   res.body << template.result( binding )
 end
+
+#総集編
+foods = [
+  { id: 1, name: "りんご", category: "fruits" },
+  { id: 2, name: "バナナ", category: "fruits" },
+  { id: 3, name: "いちご", category: "fruits" },
+  { id: 4, name: "トマト", category: "vegetables" },
+  { id: 5, name: "キャベツ", category: "vegetables" },
+  { id: 6, name: "レタス", category: "vegetables" },
+]
+
+server.mount_proc("/foods") do |req, res|
+  template = ERB.new( File.read('./foods/index.erb') )
+
+  # ここにロジックを書く
+  params = req.query["food"]
+  @foods = []
+
+  if params == "all"
+    foods.each do |food|
+      @foods.push(food)
+    end
+  elsif params == "fruits"
+    foods.each do |food|
+      if food[:category] == "fruits"
+        @foods.push(food)
+      end
+    end
+  else
+    foods.each do |food|
+      if food[:category] == "vegetables"
+        @foods.push(food)
+      end
+    end
+  end
+
+  res.body << template.result( binding )
+end
+
+trap(:INT){
+    server.shutdown
+}
 
 server.start
